@@ -1,20 +1,27 @@
 <?php
+header('Content-type: application/json');
 
-//Definitions 
-//Change if required
 
-//Temporery Directory - Files will be cahched here
-define("TEMP_DIR", "C:/Users/speck_000/sandbox/git-deploy");
+//Init Error
+$error = FALSE;
 
-//Repositorys - Could also be fetched from Database
+//Get & Validate Parameters
+$dir = $_POST["dir"];
+if(!is_dir($dir)) $error = "Directory is not a valid directory.";
 $repo = $_POST["repo"];
-$repos = array(
-			
-			0 => array( "repo" => "",
-						"" => ""
-				),
-			1 => array()
-		);
+if(empty($repo)) $error = "Repository not set.";
+
+if($error){
+	header('HTTP/1.0 400 Bad Request', true, 400);
+	die(json_encode($error));
+}
+
+
+$output = exec('ping philippspeck.com');
+echo "<pre>$output</pre>";
+
+
+
 
 
 ?>
