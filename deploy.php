@@ -1,6 +1,34 @@
 <?php
-header('Content-type: application/json');
 
+// ========== Configuration ==========
+
+//Temp Directory to work with files
+DEFINE("TEMP_DIR", "C:/Users/speck_000/temp");
+
+//Path to YUI Compressor
+DEFINE("YUI_PATH", "C:/Users/speck_000/temp/yui.jar");
+
+//Secret Token to protect your script
+DEFINE("SECRET", "dsfdf");
+
+// ========== End of Configuration ==========
+
+
+header('Content-type: application/json');
+error_reporting(0);
+
+function output($status, $content){
+	switch($status){
+		case 200:
+			header("HTTP/1.0 200 OK");
+			echo json_encode($content);
+			break;
+		case 400:
+			header("HTTP/1.0 400 BAD REQUEST");
+			die(json_encode($content));
+			break;
+	}
+}
 
 function recurse_copy($src,$dst){ 
     $dir = opendir($src); 
@@ -51,30 +79,27 @@ function recurse_compress($path){
 
 }
 
-
-
-//Constants
-DEFINE("TEMP_DIR", "C:/Users/speck_000/temp");
-DEFINE("YUI_PATH", "C:/Users/speck_000/temp/yui.jar");
-DEFINE("SECRET", "dsfdf");
-
-//Get Variables
+//Get POST Parameters
 $repo = $_POST["repo"];
+if(empty($repo)) output(400, "Repository not set.");
 $dir = $_POST["dir"];
+if(empty($dir)) output(400, "No valid directory set.");
 $compress = false;
 if($_POST["compress"]==1) $compress = true;
 
-//Generate and Create Temp Folder
-$temp_dir_repo = md5(time());
+//Generate Temp Folder
+$temp_dir_repo = md5(time()+rand(0,10));
 $temp_dir_repo_abolute = TEMP_DIR."/".$temp_dir_repo;
+
+//Create Temp Folder
 mkdir($temp_dir_repo_abolute);
 
 //Switch to Temp Folder
 chdir($temp_dir_repo_abolute);
 
 //Clone Repo
-$cmd = "git clone ".$repo." ".$temp_dir_repo_abolute;
-shell_exec($cmd);
+$statement = "git clone ".$repo." ".$temp_dir_repo_abolute;
+shell_exec($statement);
 
 if($compress) recurse_compress($temp_dir_repo);
 
@@ -84,19 +109,9 @@ recurse_copy($temp_dir_repo_abolute, $dir);
 //Delete Temp Folder
 delete_directory($temp_dir_repo_abolute);
 
-//Init Error
-$error = FALSE;
 
-//Get & Validate Parameters
-$dir = $_POST["dir"];
-if(!is_dir($dir)) $error = "Directory is not a valid directory.";
-$repo = $_POST["repo"];
-if(empty($repo)) $error = "Repository not set.";
-
-if($error){
-	header('HTTP/1.0 400 Bad Request', true, 400);
-	die(json_encode($error));
-}
+//Ouput Success
+output(200, "Deployment successful.");
 
 
 
